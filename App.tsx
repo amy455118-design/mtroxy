@@ -32,13 +32,16 @@ export default function App() {
     }
   }, []);
 
-  // Load Config
+  // Load Config & Auto-fetch Balance
   useEffect(() => {
     const saved = localStorage.getItem('proxy6_automator_config');
+    let activeConfig = DEFAULT_CONFIG;
+
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        setConfig({ ...DEFAULT_CONFIG, ...parsed });
+        activeConfig = { ...DEFAULT_CONFIG, ...parsed };
+        setConfig(activeConfig);
       } catch (e) {
         console.error("Failed to parse config", e);
       }
@@ -46,6 +49,14 @@ export default function App() {
       if (isAuthenticated) {
         setIsSettingsOpen(true);
       }
+    }
+
+    // Automatically check balance if authenticated and key exists
+    if (isAuthenticated && activeConfig.apiKey) {
+      // Use a small timeout to let the UI settle/mount before firing the request
+      setTimeout(() => {
+        fetchBalance(activeConfig);
+      }, 100);
     }
   }, [isAuthenticated]);
 
