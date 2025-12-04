@@ -3,13 +3,15 @@ import { DEFAULT_CONFIG } from './constants';
 import { AppConfig, LogEntry, ProxyItem } from './types';
 import { SettingsPanel } from './components/SettingsPanel';
 import { LogViewer } from './components/LogViewer';
+import { Login } from './components/Login';
 import { buyProxies, checkBalance, getProxies, getPrice, setProxyDescription } from './services/proxy6Service';
-import { Play, ShieldCheck, Wallet, Loader2, AlertCircle, Copy, Check } from 'lucide-react';
+import { Play, ShieldCheck, Wallet, Loader2, AlertCircle, Copy, Check, LogOut } from 'lucide-react';
 
 // Helper to delay execution to avoid rate limits (max 3 req/sec -> safe 400ms delay)
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export default function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [config, setConfig] = useState<AppConfig>(DEFAULT_CONFIG);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -19,6 +21,14 @@ export default function App() {
   // State for the big output field
   const [lastPurchased, setLastPurchased] = useState<string>('');
   const [isCopied, setIsCopied] = useState(false);
+
+  // Check authentication session
+  useEffect(() => {
+    const authSession = sessionStorage.getItem('mtroxy_auth');
+    if (authSession === 'true') {
+      setIsAuthenticated(true);
+    }
+  }, []);
 
   // Load Config
   useEffect(() => {
@@ -31,9 +41,21 @@ export default function App() {
         console.error("Failed to parse config", e);
       }
     } else {
-      setIsSettingsOpen(true);
+      if (isAuthenticated) {
+        setIsSettingsOpen(true);
+      }
     }
-  }, []);
+  }, [isAuthenticated]);
+
+  const handleLogin = () => {
+    sessionStorage.setItem('mtroxy_auth', 'true');
+    setIsAuthenticated(true);
+  };
+
+  const handleLogout = () => {
+    sessionStorage.removeItem('mtroxy_auth');
+    setIsAuthenticated(false);
+  };
 
   // Save Config
   const handleSaveConfig = (newConfig: AppConfig) => {
@@ -251,6 +273,10 @@ export default function App() {
     }
   };
 
+  if (!isAuthenticated) {
+    return <Login onLogin={handleLogin} />;
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-slate-900 to-slate-800">
       
@@ -261,8 +287,17 @@ export default function App() {
         onSave={handleSaveConfig}
       />
 
-      <div className="w-full max-w-2xl space-y-8">
+      <div className="w-full max-w-2xl space-y-8 relative">
         
+        {/* Logout Button (Hidden but accessible) */}
+        <button 
+          onClick={handleLogout}
+          className="absolute top-0 right-0 p-2 text-slate-600 hover:text-red-400 transition-colors"
+          title="Logout"
+        >
+          <LogOut size={16} />
+        </button>
+
         {/* Header Area */}
         <div className="text-center space-y-2">
           <h1 className="text-4xl font-black tracking-tight text-white flex items-center justify-center gap-3">
