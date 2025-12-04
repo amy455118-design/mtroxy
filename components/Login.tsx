@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { ShieldCheck, User, Lock, ArrowRight, AlertCircle } from 'lucide-react';
+import { ShieldCheck, User, Lock, ArrowRight, AlertCircle, Globe } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface LoginProps {
   onLogin: () => void;
 }
 
 export const Login: React.FC<LoginProps> = ({ onLogin }) => {
+  const { t, language, setLanguage } = useLanguage();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -15,7 +17,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
     if (email === 'admin@mtroxy.info' && password === 'Mtroxy@2026!') {
       onLogin();
     } else {
-      setError('Invalid email or password');
+      setError(t('invalidCredentials'));
       setPassword('');
     }
   };
@@ -27,17 +29,39 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
           {/* Decorative Glow */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-1 bg-blue-500 blur-sm"></div>
 
-          <div className="text-center mb-8 space-y-2">
+          {/* Language Switcher */}
+          <div className="absolute top-4 right-4 flex gap-1">
+             <button 
+                onClick={() => setLanguage('en')}
+                className={`px-2 py-1 rounded text-xs font-bold transition-colors ${language === 'en' ? 'bg-slate-700 text-white' : 'text-slate-500 hover:text-slate-300'}`}
+              >
+                EN
+              </button>
+              <button 
+                onClick={() => setLanguage('pt')}
+                className={`px-2 py-1 rounded text-xs font-bold transition-colors ${language === 'pt' ? 'bg-slate-700 text-white' : 'text-slate-500 hover:text-slate-300'}`}
+              >
+                PT
+              </button>
+              <button 
+                onClick={() => setLanguage('es')}
+                className={`px-2 py-1 rounded text-xs font-bold transition-colors ${language === 'es' ? 'bg-slate-700 text-white' : 'text-slate-500 hover:text-slate-300'}`}
+              >
+                ES
+              </button>
+          </div>
+
+          <div className="text-center mb-8 space-y-2 mt-4">
             <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-800/50 mb-4 border border-slate-700">
               <ShieldCheck className="text-blue-500" size={32} />
             </div>
-            <h1 className="text-2xl font-bold text-white tracking-tight">Access Control</h1>
-            <p className="text-slate-400 text-sm">Please authenticate to continue</p>
+            <h1 className="text-2xl font-bold text-white tracking-tight">{t('loginTitle')}</h1>
+            <p className="text-slate-400 text-sm">{t('loginSubtitle')}</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="space-y-2">
-              <label className="text-xs uppercase tracking-wider text-slate-500 font-semibold ml-1">Email</label>
+              <label className="text-xs uppercase tracking-wider text-slate-500 font-semibold ml-1">{t('email')}</label>
               <div className="relative group">
                 <User className="absolute left-3 top-3 text-slate-500 group-focus-within:text-blue-400 transition-colors" size={18} />
                 <input
@@ -52,7 +76,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs uppercase tracking-wider text-slate-500 font-semibold ml-1">Password</label>
+              <label className="text-xs uppercase tracking-wider text-slate-500 font-semibold ml-1">{t('password')}</label>
               <div className="relative group">
                 <Lock className="absolute left-3 top-3 text-slate-500 group-focus-within:text-blue-400 transition-colors" size={18} />
                 <input
@@ -76,13 +100,13 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
               type="submit"
               className="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-900/20 active:scale-[0.98]"
             >
-              <span>Login System</span>
+              <span>{t('loginButton')}</span>
               <ArrowRight size={18} />
             </button>
           </form>
           
           <div className="mt-8 text-center">
-            <p className="text-xs text-slate-600 font-mono">Restricted Access • Authorized Personnel Only</p>
+            <p className="text-xs text-slate-600 font-mono">{t('loginFooter')}</p>
           </div>
         </div>
       </div>

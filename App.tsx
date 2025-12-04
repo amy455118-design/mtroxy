@@ -6,11 +6,13 @@ import { LogViewer } from './components/LogViewer';
 import { Login } from './components/Login';
 import { buyProxies, checkBalance, getProxies, getPrice, setProxyDescription } from './services/proxy6Service';
 import { Play, ShieldCheck, Wallet, Loader2, AlertCircle, Copy, Check, LogOut } from 'lucide-react';
+import { useLanguage } from './contexts/LanguageContext';
 
 // Helper to delay execution to avoid rate limits (max 3 req/sec -> safe 400ms delay)
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 export default function App() {
+  const { t } = useLanguage();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [config, setConfig] = useState<AppConfig>(DEFAULT_CONFIG);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -61,7 +63,7 @@ export default function App() {
   const handleSaveConfig = (newConfig: AppConfig) => {
     setConfig(newConfig);
     localStorage.setItem('proxy6_automator_config', JSON.stringify(newConfig));
-    addLog('info', 'Configuration saved.');
+    addLog('info', t('configSaved'));
     if (newConfig.apiKey) {
       fetchBalance(newConfig);
     }
@@ -82,16 +84,16 @@ export default function App() {
       const res = await checkBalance(cfg);
       if (res.status === 'yes' && res.balance) {
         setBalance(`${res.balance} ${res.currency}`);
-        addLog('info', `Balance updated: ${res.balance} ${res.currency}`);
+        addLog('info', t('balanceUpdated', { balance: `${res.balance} ${res.currency}` }));
         return parseFloat(res.balance);
       } else {
         setBalance(null);
-        if (res.error) addLog('error', `Balance Check Failed: ${res.error}`);
+        if (res.error) addLog('error', t('balanceFailed', { error: res.error }));
         return 0;
       }
     } catch (e: any) {
       if ((e.message?.includes('Failed to fetch') || e.message?.includes('NetworkError')) && !cfg.useCorsProxy) {
-        addLog('warning', 'Network error detected. Auto-enabling CORS proxy...');
+        addLog('warning', t('networkError'));
         const newConfig = { ...cfg, useCorsProxy: true };
         setConfig(newConfig);
         localStorage.setItem('proxy6_automator_config', JSON.stringify(newConfig));
@@ -109,23 +111,23 @@ export default function App() {
       await navigator.clipboard.writeText(lastPurchased);
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 2000);
-      addLog('info', 'Proxy copied to clipboard');
+      addLog('info', t('proxyCopied'));
     } catch (err) {
-      addLog('error', 'Failed to copy to clipboard');
+      addLog('error', t('copyFailed'));
     }
   };
 
   // Smart Acquisition Logic
   const handleSmartAcquisition = async () => {
     if (!config.apiKey) {
-      addLog('error', 'API Key is missing. Please check settings.');
+      addLog('error', t('missingKey'));
       setIsSettingsOpen(true);
       return;
     }
 
     setIsProcessing(true);
     setLastPurchased('');
-    addLog('info', 'Starting smart acquisition sequence...');
+    addLog('info', t('smartSeqStart'));
 
     let currentConfig = config;
     const acquiredProxies: ProxyItem[] = [];
@@ -142,11 +144,11 @@ export default function App() {
           singlePrice = priceData.price;
         }
       } catch (e) {
-        addLog('warning', 'Could not fetch current pricing. Proceeding with caution.');
+        addLog('warning', t('cautionPrice'));
       }
 
       // 2. Fetch Active Proxies to Reuse
-      addLog('info', 'Checking inventory for reusable proxies...');
+      addLog('info', t('checkInventory'));
       const inventoryRes = await getProxies(currentConfig, 'active');
       const inventory = inventoryRes.list ? Object.values(inventoryRes.list) : [];
       
@@ -154,9 +156,6 @@ export default function App() {
 
       // Filter candidates: Must match Version, Country, Type AND be valid (not expired)
       const candidates = inventory.filter(p => {
-        // Note: API might return "ipv6" or "6", handled loosely if needed, but usually strictly matches API constants
-        // API returns type as "http" or "socks", config has "http" or "socks"
-        
         // Infer version from IP structure.
         const isV6 = p.ip.includes(':');
         const configIsV6 = config.version === '6';
@@ -168,7 +167,6 @@ export default function App() {
         );
         
         // Strict expiration check
-        // p.unixtime_end is in seconds.
         const isActive = p.active === '1';
         const isNotExpired = p.unixtime_end ? p.unixtime_end > nowUnix : true;
         
@@ -176,7 +174,6 @@ export default function App() {
       });
       
       // Sort candidates: Newest purchase date first
-      // Date format is "YYYY-MM-DD HH:mm:ss", so string comparison is valid for chronological sort.
       candidates.sort((a, b) => b.date.localeCompare(a.date));
 
       // 3. Process Reuse vs Buy
@@ -202,7 +199,7 @@ export default function App() {
                 newDescr = proxy.descr ? `${proxy.descr} ${newUsage}/3` : `${config.description || ''} ${newUsage}/3`.trim();
             }
 
-            addLog('info', `Reusing proxy ${proxy.host}:${proxy.port} (${newUsage}/3)`);
+            addLog('info', t('reuseProxy', { host: proxy.host, port: proxy.port, usage: newUsage }));
             
             // Call API to update description
             await setProxyDescription(currentConfig, proxy.id, newDescr);
@@ -218,10 +215,10 @@ export default function App() {
       if (needed > 0) {
         const estimatedCost = singlePrice * needed;
         if (currentBalance < estimatedCost && currentBalance > 0) {
-           addLog('warning', `Low balance! Need ~${estimatedCost}, have ${currentBalance}. Attempting purchase anyway...`);
+           addLog('warning', t('lowBalance', { cost: estimatedCost, balance: currentBalance }));
         }
 
-        addLog('info', `Buying ${needed} new prox${needed > 1 ? 'ies' : 'y'}...`);
+        addLog('info', t('buyingProxies', { count: needed, suffix: needed > 1 ? (t('days') === 'days' ? 'ies' : 's') : (t('days') === 'days' ? 'y' : '') }));
 
         // Prepare description: "1/3" for new proxies
         const initDescr = `${config.description || ''} 1/3`.trim();
@@ -230,7 +227,7 @@ export default function App() {
 
         if (buyRes.status === 'yes' && buyRes.list) {
             const newIds = Object.keys(buyRes.list);
-            addLog('success', `Bought ${newIds.length} new proxies. Order #${buyRes.order_id}`);
+            addLog('success', t('boughtSuccess', { count: newIds.length, id: buyRes.order_id || '?' }));
             
             Object.values(buyRes.list).forEach(p => {
                 acquiredProxies.push({ ...p, descr: initDescr });
@@ -239,7 +236,7 @@ export default function App() {
             // Update balance
             if (buyRes.balance) setBalance(`${buyRes.balance} ${buyRes.currency}`);
         } else {
-            addLog('error', `Purchase failed: ${buyRes.error || 'Unknown error'}`);
+            addLog('error', t('purchaseFailed', { error: buyRes.error || 'Unknown error' }));
         }
       }
 
@@ -249,24 +246,24 @@ export default function App() {
         const formattedList = acquiredProxies.map((p: ProxyItem) => `${p.host}:${p.port}:${p.user}:${p.pass}`).join('\n');
         setLastPurchased(formattedList);
         
-        // Copy first one to clipboard automatically if only 1 requested (as implied by singular button usage)
+        // Copy first one to clipboard automatically if only 1 requested
         if (acquiredProxies.length === 1) {
             navigator.clipboard.writeText(formattedList).then(() => {
                 setIsCopied(true);
                 setTimeout(() => setIsCopied(false), 2000);
-                addLog('success', 'Proxy copied to clipboard automatically');
+                addLog('success', t('autoCopied'));
             }).catch(() => {});
         } else {
-             addLog('success', `Acquired ${acquiredProxies.length} proxies.`);
+             addLog('success', t('acquiredCount', { count: acquiredProxies.length }));
         }
       } else {
-        addLog('warning', 'No proxies acquired.');
+        addLog('warning', t('noProxies'));
       }
 
     } catch (error: any) {
-       addLog('error', 'Process failed', error.message);
+       addLog('error', t('processFailed'), error.message);
        if (error.message?.includes('Failed to fetch') && !currentConfig.useCorsProxy) {
-           addLog('warning', 'Check internet or enable CORS proxy in settings.');
+           addLog('warning', t('checkInternet'));
        }
     } finally {
       setIsProcessing(false);
@@ -289,11 +286,11 @@ export default function App() {
 
       <div className="w-full max-w-2xl space-y-8 relative">
         
-        {/* Logout Button (Hidden but accessible) */}
+        {/* Logout Button */}
         <button 
           onClick={handleLogout}
           className="absolute top-0 right-0 p-2 text-slate-600 hover:text-red-400 transition-colors"
-          title="Logout"
+          title={t('logout')}
         >
           <LogOut size={16} />
         </button>
@@ -306,7 +303,7 @@ export default function App() {
               MTROXY
             </span>
           </h1>
-          <p className="text-slate-400">Smart Purchasing Tool (Proxy Automator)</p>
+          <p className="text-slate-400">{t('subtitle')}</p>
         </div>
 
         {/* Main Control Card */}
@@ -318,7 +315,7 @@ export default function App() {
           {/* Configuration Summary */}
           <div className="flex justify-between items-end mb-8">
             <div className="space-y-1">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">Target Pattern</span>
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-widest">{t('targetPattern')}</span>
               <div className="flex items-baseline gap-2 text-white text-lg">
                 <span className="font-mono text-blue-400 font-bold">{config.count}</span> 
                 <span className="text-slate-300">x</span>
@@ -330,12 +327,12 @@ export default function App() {
                 </span>
               </div>
               <div className="text-sm text-slate-500">
-                Duration: {config.period} days • Tag: {config.description || 'None'}
+                {t('duration')}: {config.period} {t('days')} • {t('tag')}: {config.description || t('none')}
               </div>
             </div>
 
             <div className="text-right">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-1">Wallet Balance</span>
+              <span className="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-1">{t('walletBalance')}</span>
               <div className={`text-xl font-mono flex items-center justify-end gap-2 ${balance ? 'text-green-400' : 'text-slate-600'}`}>
                 <Wallet size={18} />
                 {balance || '---'}
@@ -359,12 +356,12 @@ export default function App() {
             {isProcessing ? (
               <>
                 <Loader2 className="animate-spin" size={32} />
-                Processing...
+                {t('processing')}
               </>
             ) : (
               <>
                 <Play fill="currentColor" size={32} />
-                EXECUTE PURCHASE
+                {t('executePurchase')}
               </>
             )}
           </button>
@@ -376,7 +373,7 @@ export default function App() {
                  <div className="flex flex-col md:flex-row gap-1">
                     <div className="relative flex-grow group">
                       <div className="absolute top-0 left-0 px-3 py-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-widest pointer-events-none">
-                        Purchased Proxy
+                        {t('purchasedProxy')}
                       </div>
                       <textarea
                         readOnly
@@ -398,19 +395,19 @@ export default function App() {
                     >
                       {isCopied ? <Check size={24} /> : <Copy size={24} />}
                       <span className="text-[10px] font-bold uppercase tracking-wider">
-                        {isCopied ? 'Copied' : 'Copy'}
+                        {isCopied ? t('copied') : t('copy')}
                       </span>
                     </button>
                  </div>
                </div>
-               <p className="text-center text-xs text-slate-500 mt-2 font-mono">Format: IP:PORT:LOGIN:PASSWORD</p>
+               <p className="text-center text-xs text-slate-500 mt-2 font-mono">{t('formatInfo')}</p>
             </div>
           )}
           
           {!config.apiKey && (
              <div className="mt-4 flex items-center justify-center gap-2 text-amber-500 text-sm bg-amber-950/30 p-2 rounded border border-amber-900/50">
                <AlertCircle size={16} />
-               <span>Setup required: Please configure your API Key in settings.</span>
+               <span>{t('setupRequired')}</span>
              </div>
           )}
 

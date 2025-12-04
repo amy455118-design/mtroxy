@@ -1,12 +1,14 @@
 import React from 'react';
 import { LogEntry } from '../types';
 import { Terminal, Clock, CheckCircle, AlertCircle, Info } from 'lucide-react';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface LogViewerProps {
   logs: LogEntry[];
 }
 
 export const LogViewer: React.FC<LogViewerProps> = ({ logs }) => {
+  const { t } = useLanguage();
   const scrollRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
@@ -32,11 +34,11 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logs }) => {
     <div className="w-full bg-slate-950 rounded-xl border border-slate-800 flex flex-col h-64 shadow-inner">
       <div className="flex items-center gap-2 px-4 py-2 border-b border-slate-800 bg-slate-900/50 rounded-t-xl">
         <Terminal size={14} className="text-slate-500" />
-        <span className="text-xs font-mono text-slate-500 uppercase">System Logs</span>
+        <span className="text-xs font-mono text-slate-500 uppercase">{t('systemLogs')}</span>
       </div>
       <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 font-mono text-sm space-y-3">
         {logs.length === 0 && (
-          <div className="text-slate-600 text-center italic mt-10">No activity recorded</div>
+          <div className="text-slate-600 text-center italic mt-10">{t('noActivity')}</div>
         )}
         {logs.map(log => (
           <div key={log.id} className="flex items-start gap-3 animate-in fade-in slide-in-from-bottom-1 duration-200">
