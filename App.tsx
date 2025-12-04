@@ -303,10 +303,10 @@ export default function App() {
           <h1 className="text-4xl font-black tracking-tight text-white flex items-center justify-center gap-3">
             <ShieldCheck className="text-blue-500" size={40} />
             <span className="bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
-              PROXY AUTOMATOR
+              MTROXY
             </span>
           </h1>
-          <p className="text-slate-400">Smart Purchasing Tool (Reuse Logic Active)</p>
+          <p className="text-slate-400">Smart Purchasing Tool (Proxy Automator)</p>
         </div>
 
         {/* Main Control Card */}
