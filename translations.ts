@@ -1,3 +1,4 @@
+
 export type Language = 'en' | 'pt' | 'es';
 
 export const translations = {
@@ -22,6 +23,7 @@ export const translations = {
     tag: "Tag",
     none: "None",
     walletBalance: "Wallet Balance",
+    refreshBalance: "Refresh Balance",
     executePurchase: "EXECUTE PURCHASE",
     processing: "Processing...",
     
@@ -98,6 +100,7 @@ export const translations = {
     tag: "Tag",
     none: "Nenhum",
     walletBalance: "Saldo",
+    refreshBalance: "Atualizar Saldo",
     executePurchase: "EXECUTAR COMPRA",
     processing: "Processando...",
     
@@ -174,6 +177,7 @@ export const translations = {
     tag: "Etiqueta",
     none: "Ninguno",
     walletBalance: "Saldo",
+    refreshBalance: "Actualizar Saldo",
     executePurchase: "EJECUTAR COMPRA",
     processing: "Procesando...",
     

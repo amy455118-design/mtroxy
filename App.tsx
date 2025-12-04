@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { DEFAULT_CONFIG } from './constants';
 import { AppConfig, LogEntry, ProxyItem } from './types';
@@ -5,7 +6,7 @@ import { SettingsPanel } from './components/SettingsPanel';
 import { LogViewer } from './components/LogViewer';
 import { Login } from './components/Login';
 import { buyProxies, checkBalance, getProxies, getPrice, setProxyDescription } from './services/proxy6Service';
-import { Play, ShieldCheck, Wallet, Loader2, AlertCircle, Copy, Check, LogOut } from 'lucide-react';
+import { Play, ShieldCheck, Wallet, Loader2, AlertCircle, Copy, Check, LogOut, RefreshCw } from 'lucide-react';
 import { useLanguage } from './contexts/LanguageContext';
 
 // Helper to delay execution to avoid rate limits (max 3 req/sec -> safe 400ms delay)
@@ -59,6 +60,17 @@ export default function App() {
       }, 100);
     }
   }, [isAuthenticated]);
+
+  // Auto-refresh balance every 5 minutes (300000ms)
+  useEffect(() => {
+    if (!isAuthenticated || !config.apiKey) return;
+
+    const intervalId = setInterval(() => {
+      fetchBalance(config);
+    }, 5 * 60 * 1000);
+
+    return () => clearInterval(intervalId);
+  }, [isAuthenticated, config]);
 
   const handleLogin = () => {
     sessionStorage.setItem('mtroxy_auth', 'true');
@@ -344,9 +356,18 @@ export default function App() {
 
             <div className="text-right">
               <span className="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-1">{t('walletBalance')}</span>
-              <div className={`text-xl font-mono flex items-center justify-end gap-2 ${balance ? 'text-green-400' : 'text-slate-600'}`}>
-                <Wallet size={18} />
-                {balance || '---'}
+              <div className="flex items-center justify-end gap-2">
+                <div className={`text-xl font-mono flex items-center gap-2 ${balance ? 'text-green-400' : 'text-slate-600'}`}>
+                  <Wallet size={18} />
+                  {balance || '---'}
+                </div>
+                <button 
+                  onClick={() => fetchBalance(config)}
+                  className="p-1.5 text-slate-500 hover:text-blue-400 transition-colors rounded-lg hover:bg-slate-800/50"
+                  title={t('refreshBalance')}
+                >
+                  <RefreshCw size={14} />
+                </button>
               </div>
             </div>
           </div>
