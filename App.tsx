@@ -12,6 +12,44 @@ import { useLanguage } from './contexts/LanguageContext';
 // Helper to delay execution to avoid rate limits (max 3 req/sec -> safe 400ms delay)
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
+// Helper for robust clipboard copying (handles HTTP/non-secure contexts)
+const copyTextToClipboard = async (text: string): Promise<boolean> => {
+  if (!navigator.clipboard) {
+    return copyToClipboardFallback(text);
+  }
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch (err) {
+    console.warn('Clipboard API failed, attempting fallback', err);
+    return copyToClipboardFallback(text);
+  }
+};
+
+const copyToClipboardFallback = (text: string): boolean => {
+  try {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    
+    // Ensure it's not visible but part of DOM to work
+    textArea.style.top = "0";
+    textArea.style.left = "0";
+    textArea.style.position = "fixed";
+    textArea.style.opacity = "0";
+
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+
+    const successful = document.execCommand('copy');
+    document.body.removeChild(textArea);
+    return successful;
+  } catch (err) {
+    console.error('Fallback copy failed', err);
+    return false;
+  }
+};
+
 export default function App() {
   const { t } = useLanguage();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -130,12 +168,14 @@ export default function App() {
 
   const handleCopyProxy = async () => {
     if (!lastPurchased) return;
-    try {
-      await navigator.clipboard.writeText(lastPurchased);
+    
+    const success = await copyTextToClipboard(lastPurchased);
+    
+    if (success) {
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 2000);
       addLog('info', t('proxyCopied'));
-    } catch (err) {
+    } else {
       addLog('error', t('copyFailed'));
     }
   };
@@ -271,11 +311,12 @@ export default function App() {
         
         // Copy first one to clipboard automatically if only 1 requested
         if (acquiredProxies.length === 1) {
-            navigator.clipboard.writeText(formattedList).then(() => {
+            const success = await copyTextToClipboard(formattedList);
+            if (success) {
                 setIsCopied(true);
                 setTimeout(() => setIsCopied(false), 2000);
                 addLog('success', t('autoCopied'));
-            }).catch(() => {});
+            }
         } else {
              addLog('success', t('acquiredCount', { count: acquiredProxies.length }));
         }
