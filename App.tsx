@@ -265,7 +265,11 @@ export default function App() {
             addLog('info', t('reuseProxy', { host: proxy.host, port: proxy.port, usage: newUsage }));
             
             // Call API to update description
-            await setProxyDescription(currentConfig, proxy.id, newDescr);
+            const updateRes = await setProxyDescription(currentConfig, proxy.id, newDescr);
+            if (updateRes.status !== 'yes') {
+                 addLog('error', t('tagUpdateFailed', { error: updateRes.error || 'Unknown' }));
+            }
+            
             await delay(400); // Rate limit protection
 
             // Update local object to reflect change for display

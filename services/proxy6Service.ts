@@ -51,7 +51,7 @@ export const getProxies = async (config: AppConfig, state: string = 'active'): P
 export const setProxyDescription = async (config: AppConfig, ids: string, description: string): Promise<ApiBaseResponse> => {
   const url = buildUrl(config, 'setdescr', {
     ids: ids,
-    new: description
+    descr: description
   });
   return fetchApi<ApiBaseResponse>(url);
 };
@@ -68,14 +68,6 @@ export const buyProxies = async (config: AppConfig, countOverride?: number, desc
   };
 
   // Only send auto_prolong if explicitly true. 
-  // API defaults to enabled if auto_prolong is not sent in some contexts, 
-  // but usually it adheres to account defaults unless specified. 
-  // However, to be safe per user request: "The "auto-prolong" option is deactivated"
-  // If the API behaves such that absence = account default, and account default is ON, 
-  // we might need to send '0' if the API supports it. 
-  // Documentation says: "auto_prolong - By adding this parameter (the value is not needed), enables..."
-  // It does NOT explicitly say how to disable if account default is on. 
-  // However, standard API practice implies sending it enables it.
   if (config.autoProlong) {
     params.auto_prolong = 1;
   }
