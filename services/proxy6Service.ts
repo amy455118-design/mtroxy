@@ -6,6 +6,10 @@ const buildUrl = (config: AppConfig, method: string, params: Record<string, stri
   Object.entries(params).forEach(([key, value]) => {
     queryParams.append(key, String(value));
   });
+  
+  // Add a unique timestamp to force a fresh request (cache busting)
+  // This prevents the browser or CORS proxy from serving stale data (e.g., old descriptions)
+  queryParams.append('_t', String(Date.now()));
 
   const targetUrl = `${PROXY6_API_BASE}/${config.apiKey}/${method}?${queryParams.toString()}`;
   return config.useCorsProxy ? `${CORS_PROXY_PREFIX}${encodeURIComponent(targetUrl)}` : targetUrl;
@@ -13,7 +17,7 @@ const buildUrl = (config: AppConfig, method: string, params: Record<string, stri
 
 const fetchApi = async <T>(url: string): Promise<T> => {
   try {
-    const response = await fetch(url);
+    const response = await fetch(url, { cache: 'no-store' });
     if (!response.ok) {
       throw new Error(`Network error: ${response.statusText}`);
     }
@@ -27,8 +31,11 @@ const fetchApi = async <T>(url: string): Promise<T> => {
 export const checkBalance = async (config: AppConfig): Promise<ApiBaseResponse> => {
   // Calling endpoint without method returns balance
   const targetUrl = `${PROXY6_API_BASE}/${config.apiKey}`;
-  const finalUrl = config.useCorsProxy ? `${CORS_PROXY_PREFIX}${encodeURIComponent(targetUrl)}` : targetUrl;
-  return fetchApi<ApiBaseResponse>(finalUrl);
+  const urlWithCacheBuster = config.useCorsProxy 
+    ? `${CORS_PROXY_PREFIX}${encodeURIComponent(targetUrl + `?_t=${Date.now()}`)}` 
+    : targetUrl + `?_t=${Date.now()}`;
+    
+  return fetchApi<ApiBaseResponse>(urlWithCacheBuster);
 };
 
 export const getPrice = async (config: AppConfig, countOverride?: number): Promise<GetPriceResponse> => {

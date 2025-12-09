@@ -28,6 +28,7 @@ export interface ApiBaseResponse {
   currency?: string;
   error?: string;
   error_id?: number;
+  count?: number;
 }
 
 export interface BuyResponse extends ApiBaseResponse {

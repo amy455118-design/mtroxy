@@ -215,6 +215,16 @@ export default function App() {
       const inventoryRes = await getProxies(currentConfig, 'active');
       const inventory = inventoryRes.list ? Object.values(inventoryRes.list) : [];
       
+      // DEBUG LOG START
+      // if (inventory.length > 0) {
+      //   // Show first 5 proxies info to check what we got
+      //   const debugSummary = inventory.slice(0, 5).map(p => `ID:${p.id} Descr:"${p.descr || ''}"`).join('\n') + (inventory.length > 5 ? '\n...' : '');
+      //   addLog('info', `Fetched Inventory (${inventory.length})`, debugSummary);
+      // } else {
+      //   addLog('info', 'Fetched Inventory', 'No active proxies found');
+      // }
+      // DEBUG LOG END
+      
       const nowUnix = Math.floor(Date.now() / 1000);
 
       // Filter candidates: Must match Version, Country, Type AND be valid (not expired)
@@ -266,9 +276,13 @@ export default function App() {
             
             // Call API to update description
             const updateRes = await setProxyDescription(currentConfig, proxy.id, newDescr);
-            if (updateRes.status !== 'yes') {
-                 addLog('error', t('tagUpdateFailed', { error: updateRes.error || 'Unknown' }));
-            }
+            
+            // Log the result to help debug
+            // if (updateRes.status === 'yes') {
+            //      addLog('info', 'Tag update response', `Status: ${updateRes.status}, Count: ${updateRes.count || 0}`);
+            // } else {
+            //      addLog('error', t('tagUpdateFailed', { error: updateRes.error || 'Unknown' }), `Status: ${updateRes.status}`);
+            // }
             
             await delay(400); // Rate limit protection
 
