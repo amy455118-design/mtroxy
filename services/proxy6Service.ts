@@ -51,7 +51,7 @@ export const getProxies = async (config: AppConfig, state: string = 'active'): P
 export const setProxyDescription = async (config: AppConfig, ids: string, description: string): Promise<ApiBaseResponse> => {
   const url = buildUrl(config, 'setdescr', {
     ids: ids,
-    descr: description
+    new: description
   });
   return fetchApi<ApiBaseResponse>(url);
 };
