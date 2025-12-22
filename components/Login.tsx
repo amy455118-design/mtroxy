@@ -14,7 +14,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (email === 'admin@mtroxy.info' && password === 'Mtroxy@2026!') {
+    if (email === 'admin@mtroxy.com' && password === 'Mtroxy@2026!') {
       onLogin();
     } else {
       setError(t('invalidCredentials'));
