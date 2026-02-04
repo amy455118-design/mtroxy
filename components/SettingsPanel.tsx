@@ -1,7 +1,7 @@
 import React from 'react';
 import { AppConfig, ProxyType, ProxyVersion } from '../types';
 import { COUNTRY_LIST } from '../constants';
-import { Settings, Save, AlertTriangle, Globe, Server } from 'lucide-react';
+import { Settings, Save, AlertTriangle, Globe, Server, Monitor } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Language } from '../translations';
 
@@ -28,6 +28,15 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ config, isOpen, on
   const handleSave = () => {
     onSave(localConfig);
     onToggle();
+  };
+
+  const setLocalBackend = () => {
+    // Determine current host to suggest correct URL (localhost or current IP)
+    const protocol = window.location.protocol;
+    const hostname = window.location.hostname;
+    // Assuming backend runs on port 8080 on the same host
+    const backendUrl = `${protocol}//${hostname}:8080/proxy?url=`;
+    setLocalConfig(prev => ({ ...prev, customProxyUrl: backendUrl }));
   };
 
   if (!isOpen) {
@@ -196,7 +205,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ config, isOpen, on
            
            <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
              <div className="flex items-start gap-2">
-                <AlertTriangle className="text-yellow-500 shrink-0" size={16} />
+                <Server className="text-yellow-500 shrink-0" size={16} />
                 <div className="space-y-2 w-full">
                    <p className="text-xs text-yellow-200">
                     {t('corsNote')}
@@ -213,17 +222,23 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ config, isOpen, on
                   </div>
                   
                   {localConfig.useCorsProxy && (
-                    <div className="mt-2 animate-in fade-in slide-in-from-top-1">
+                    <div className="mt-2 animate-in fade-in slide-in-from-top-1 space-y-2">
                       <label className="text-xs text-yellow-200/70 block mb-1 flex items-center gap-1">
-                        <Server size={10} /> {t('customProxyUrl')}
+                        <Monitor size={10} /> {t('customProxyUrl')}
                       </label>
                       <input 
                         type="text"
                         value={localConfig.customProxyUrl || ''}
                         onChange={(e) => handleChange('customProxyUrl', e.target.value)}
-                        className="w-full bg-slate-900/50 border border-yellow-500/30 rounded px-2 py-1 text-xs text-yellow-100 placeholder-yellow-500/30 focus:outline-none focus:border-yellow-500"
+                        className="w-full bg-slate-900/50 border border-yellow-500/30 rounded px-2 py-1 text-xs text-yellow-100 placeholder-yellow-500/30 focus:outline-none focus:border-yellow-500 font-mono"
                         placeholder={t('customProxyPlaceholder')}
                       />
+                       <button 
+                        onClick={setLocalBackend}
+                        className="text-xs bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-200 px-2 py-1 rounded w-full border border-yellow-500/30 transition-colors"
+                       >
+                         {t('useLocalServer')}
+                       </button>
                     </div>
                   )}
                 </div>
