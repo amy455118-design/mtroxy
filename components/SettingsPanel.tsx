@@ -1,7 +1,7 @@
 import React from 'react';
 import { AppConfig, ProxyType, ProxyVersion } from '../types';
 import { COUNTRY_LIST } from '../constants';
-import { Settings, Save, AlertTriangle, Globe } from 'lucide-react';
+import { Settings, Save, AlertTriangle, Globe, Server } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { Language } from '../translations';
 
@@ -197,11 +197,11 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ config, isOpen, on
            <div className="p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
              <div className="flex items-start gap-2">
                 <AlertTriangle className="text-yellow-500 shrink-0" size={16} />
-                <div className="space-y-2">
+                <div className="space-y-2 w-full">
                    <p className="text-xs text-yellow-200">
                     {t('corsNote')}
                   </p>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 mb-2">
                     <input 
                       id="corsproxy"
                       type="checkbox" 
@@ -211,6 +211,21 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ config, isOpen, on
                     />
                     <label htmlFor="corsproxy" className="text-sm text-yellow-100 font-medium">{t('useCors')}</label>
                   </div>
+                  
+                  {localConfig.useCorsProxy && (
+                    <div className="mt-2 animate-in fade-in slide-in-from-top-1">
+                      <label className="text-xs text-yellow-200/70 block mb-1 flex items-center gap-1">
+                        <Server size={10} /> {t('customProxyUrl')}
+                      </label>
+                      <input 
+                        type="text"
+                        value={localConfig.customProxyUrl || ''}
+                        onChange={(e) => handleChange('customProxyUrl', e.target.value)}
+                        className="w-full bg-slate-900/50 border border-yellow-500/30 rounded px-2 py-1 text-xs text-yellow-100 placeholder-yellow-500/30 focus:outline-none focus:border-yellow-500"
+                        placeholder={t('customProxyPlaceholder')}
+                      />
+                    </div>
+                  )}
                 </div>
              </div>
            </div>

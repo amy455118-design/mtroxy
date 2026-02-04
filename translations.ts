@@ -50,6 +50,8 @@ export const translations = {
     autoProlong: "Auto-prolong enabled",
     corsNote: "If requests fail, try enabling the CORS proxy. This routes requests through a public proxy to bypass browser restrictions.",
     useCors: "Use CORS Proxy",
+    customProxyUrl: "Custom Proxy URL",
+    customProxyPlaceholder: "Leave empty for default (AllOrigins)",
     saveConfig: "Save Configuration",
     
     // Logs
@@ -128,6 +130,8 @@ export const translations = {
     autoProlong: "Renovação automática ativada",
     corsNote: "Se as solicitações falharem, ative o proxy CORS. Isso roteia solicitações por um proxy público para contornar restrições.",
     useCors: "Usar Proxy CORS",
+    customProxyUrl: "URL do Proxy Personalizado",
+    customProxyPlaceholder: "Vazio para padrão (AllOrigins)",
     saveConfig: "Salvar Configuração",
     
     // Logs
@@ -206,6 +210,8 @@ export const translations = {
     autoProlong: "Renovación automática activada",
     corsNote: "Si fallan las solicitudes, active el proxy CORS. Esto enruta las solicitudes a través de un proxy público para evitar restricciones.",
     useCors: "Usar Proxy CORS",
+    customProxyUrl: "URL de Proxy Personalizado",
+    customProxyPlaceholder: "Vacío para defecto (AllOrigins)",
     saveConfig: "Guardar Configuración",
     
     // Logs

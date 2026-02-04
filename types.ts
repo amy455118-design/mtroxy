@@ -19,6 +19,7 @@ export interface AppConfig {
   description: string;
   autoProlong: boolean;
   useCorsProxy: boolean;
+  customProxyUrl?: string;
 }
 
 export interface ApiBaseResponse {

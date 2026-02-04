@@ -10,10 +10,12 @@ export const DEFAULT_CONFIG: AppConfig = {
   description: '',
   autoProlong: false,
   useCorsProxy: true,
+  customProxyUrl: '',
 };
 
 export const PROXY6_API_BASE = 'https://px6.link/api';
-export const CORS_PROXY_PREFIX = 'https://api.cors.lol/?url=';
+// Using AllOrigins raw API which is free and open source
+export const CORS_PROXY_PREFIX = 'https://api.allorigins.win/raw?url=';
 
 export const COUNTRY_LIST = [
   'au', 'bg', 'br', 'ca', 'cn', 'cz', 'de', 'dk', 'ee', 'es', 

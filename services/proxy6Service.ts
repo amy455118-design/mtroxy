@@ -12,7 +12,15 @@ const buildUrl = (config: AppConfig, method: string, params: Record<string, stri
   queryParams.append('_t', String(Date.now()));
 
   const targetUrl = `${PROXY6_API_BASE}/${config.apiKey}/${method}?${queryParams.toString()}`;
-  return config.useCorsProxy ? `${CORS_PROXY_PREFIX}${encodeURIComponent(targetUrl)}` : targetUrl;
+  
+  if (config.useCorsProxy) {
+    const proxyPrefix = config.customProxyUrl && config.customProxyUrl.trim() !== '' 
+      ? config.customProxyUrl 
+      : CORS_PROXY_PREFIX;
+    return `${proxyPrefix}${encodeURIComponent(targetUrl)}`;
+  }
+
+  return targetUrl;
 };
 
 const fetchApi = async <T>(url: string): Promise<T> => {
@@ -31,11 +39,18 @@ const fetchApi = async <T>(url: string): Promise<T> => {
 export const checkBalance = async (config: AppConfig): Promise<ApiBaseResponse> => {
   // Calling endpoint without method returns balance
   const targetUrl = `${PROXY6_API_BASE}/${config.apiKey}`;
-  const urlWithCacheBuster = config.useCorsProxy 
-    ? `${CORS_PROXY_PREFIX}${encodeURIComponent(targetUrl + `?_t=${Date.now()}`)}` 
-    : targetUrl + `?_t=${Date.now()}`;
+  const urlWithCacheBuster = targetUrl + `?_t=${Date.now()}`;
+  
+  let finalUrl = urlWithCacheBuster;
+
+  if (config.useCorsProxy) {
+    const proxyPrefix = config.customProxyUrl && config.customProxyUrl.trim() !== '' 
+      ? config.customProxyUrl 
+      : CORS_PROXY_PREFIX;
+    finalUrl = `${proxyPrefix}${encodeURIComponent(urlWithCacheBuster)}`;
+  }
     
-  return fetchApi<ApiBaseResponse>(urlWithCacheBuster);
+  return fetchApi<ApiBaseResponse>(finalUrl);
 };
 
 export const getPrice = async (config: AppConfig, countOverride?: number): Promise<GetPriceResponse> => {
