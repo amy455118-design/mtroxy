@@ -13,7 +13,7 @@ export const DEFAULT_CONFIG: AppConfig = {
 };
 
 export const PROXY6_API_BASE = 'https://px6.link/api';
-export const CORS_PROXY_PREFIX = 'https://corsproxy.io/?';
+export const CORS_PROXY_PREFIX = 'https://api.cors.lol/?url=';
 
 export const COUNTRY_LIST = [
   'au', 'bg', 'br', 'ca', 'cn', 'cz', 'de', 'dk', 'ee', 'es', 
