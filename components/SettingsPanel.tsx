@@ -31,12 +31,9 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ config, isOpen, on
   };
 
   const setLocalBackend = () => {
-    // Determine current host to suggest correct URL (localhost or current IP)
-    const protocol = window.location.protocol;
-    const hostname = window.location.hostname;
-    // Assuming backend runs on port 8080 on the same host
-    const backendUrl = `${protocol}//${hostname}:8080/proxy?url=`;
-    setLocalConfig(prev => ({ ...prev, customProxyUrl: backendUrl }));
+    // For production (Same Origin), we use a relative path.
+    // This allows it to work on any domain (mtroxy.com, localhost, etc) automatically.
+    setLocalConfig(prev => ({ ...prev, customProxyUrl: '/proxy?url=' }));
   };
 
   if (!isOpen) {

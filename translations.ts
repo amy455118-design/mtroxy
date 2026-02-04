@@ -51,7 +51,7 @@ export const translations = {
     corsNote: "For maximum reliability, use the included server.js backend.",
     useCors: "Use Proxy / Backend",
     customProxyUrl: "Proxy URL",
-    customProxyPlaceholder: "e.g. http://localhost:8080/proxy?url=",
+    customProxyPlaceholder: "e.g. /proxy?url=",
     useLocalServer: "Set to Local Backend",
     saveConfig: "Save Configuration",
     
@@ -132,7 +132,7 @@ export const translations = {
     corsNote: "Para máxima confiabilidade, use o backend server.js incluído.",
     useCors: "Usar Proxy / Backend",
     customProxyUrl: "URL do Proxy",
-    customProxyPlaceholder: "ex: http://localhost:8080/proxy?url=",
+    customProxyPlaceholder: "ex: /proxy?url=",
     useLocalServer: "Usar Backend Local",
     saveConfig: "Salvar Configuração",
     
@@ -213,7 +213,7 @@ export const translations = {
     corsNote: "Para máxima fiabilidad, use el backend server.js incluido.",
     useCors: "Usar Proxy / Backend",
     customProxyUrl: "URL del Proxy",
-    customProxyPlaceholder: "ej: http://localhost:8080/proxy?url=",
+    customProxyPlaceholder: "ej: /proxy?url=",
     useLocalServer: "Usar Backend Local",
     saveConfig: "Guardar Configuración",
     
