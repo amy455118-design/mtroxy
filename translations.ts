@@ -81,7 +81,8 @@ export const translations = {
     checkInternet: "Check internet or enable CORS proxy in settings.",
     cautionPrice: "Could not fetch current pricing. Proceeding with caution.",
     manualCORS: "Network error. Try enabling CORS Proxy in settings.",
-    autoCopied: "Proxy copied to clipboard automatically"
+    autoCopied: "Proxy copied to clipboard automatically",
+    manualCopyRequired: "Auto-copy blocked by browser. Please copy manually."
   },
   pt: {
     // Login
@@ -162,7 +163,8 @@ export const translations = {
     checkInternet: "Verifique a internet ou ative o proxy CORS.",
     cautionPrice: "Não foi possível obter preço atual. Prosseguindo com cautela.",
     manualCORS: "Erro de rede. Tente ativar o Proxy CORS nas configurações.",
-    autoCopied: "Proxy copiado automaticamente"
+    autoCopied: "Proxy copiado automaticamente",
+    manualCopyRequired: "Cópia automática bloqueada pelo navegador. Copie manualmente."
   },
   es: {
     // Login
@@ -243,6 +245,7 @@ export const translations = {
     checkInternet: "Verifique internet o active proxy CORS.",
     cautionPrice: "No se pudo obtener precio actual. Procediendo con precaución.",
     manualCORS: "Error de red. Intente habilitar Proxy CORS en la configuración.",
-    autoCopied: "Proxy copiado automáticamente"
+    autoCopied: "Proxy copiado automáticamente",
+    manualCopyRequired: "Copia automática bloqueada por el navegador. Copiar manualmente."
   }
 };

@@ -13,6 +13,8 @@ import { useLanguage } from './contexts/LanguageContext';
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 // Helper for robust clipboard copying (handles HTTP/non-secure contexts)
+// Note: We suppress console errors here because browsers often block async clipboard writes
+// without user gesture, which is expected behavior but shouldn't look like a crash.
 const copyTextToClipboard = async (text: string): Promise<boolean> => {
   if (!navigator.clipboard) {
     return copyToClipboardFallback(text);
@@ -21,7 +23,7 @@ const copyTextToClipboard = async (text: string): Promise<boolean> => {
     await navigator.clipboard.writeText(text);
     return true;
   } catch (err) {
-    console.warn('Clipboard API failed, attempting fallback', err);
+    // Suppress console spam for expected browser restriction
     return copyToClipboardFallback(text);
   }
 };
@@ -45,7 +47,7 @@ const copyToClipboardFallback = (text: string): boolean => {
     document.body.removeChild(textArea);
     return successful;
   } catch (err) {
-    console.error('Fallback copy failed', err);
+    // Suppress console spam
     return false;
   }
 };
@@ -62,6 +64,7 @@ export default function App() {
   // State for the big output field
   const [lastPurchased, setLastPurchased] = useState<string>('');
   const [isCopied, setIsCopied] = useState(false);
+  const [highlightCopy, setHighlightCopy] = useState(false);
 
   // Check authentication session
   useEffect(() => {
@@ -169,6 +172,9 @@ export default function App() {
   const handleCopyProxy = async () => {
     if (!lastPurchased) return;
     
+    // Reset highlights
+    setHighlightCopy(false);
+    
     const success = await copyTextToClipboard(lastPurchased);
     
     if (success) {
@@ -190,6 +196,7 @@ export default function App() {
 
     setIsProcessing(true);
     setLastPurchased('');
+    setHighlightCopy(false);
     addLog('info', t('smartSeqStart'));
 
     let currentConfig = config;
@@ -215,38 +222,22 @@ export default function App() {
       const inventoryRes = await getProxies(currentConfig, 'active');
       const inventory = inventoryRes.list ? Object.values(inventoryRes.list) : [];
       
-      // DEBUG LOG START
-      // if (inventory.length > 0) {
-      //   // Show first 5 proxies info to check what we got
-      //   const debugSummary = inventory.slice(0, 5).map(p => `ID:${p.id} Descr:"${p.descr || ''}"`).join('\n') + (inventory.length > 5 ? '\n...' : '');
-      //   addLog('info', `Fetched Inventory (${inventory.length})`, debugSummary);
-      // } else {
-      //   addLog('info', 'Fetched Inventory', 'No active proxies found');
-      // }
-      // DEBUG LOG END
-      
       const nowUnix = Math.floor(Date.now() / 1000);
 
-      // Filter candidates: Must match Version, Country, Type AND be valid (not expired)
+      // Filter candidates
       const candidates = inventory.filter(p => {
-        // Infer version from IP structure.
         const isV6 = p.ip.includes(':');
         const configIsV6 = config.version === '6';
-        
         const matchesConfig = (
           isV6 === configIsV6 && 
           p.country === config.country && 
           p.type === config.type
         );
-        
-        // Strict expiration check
         const isActive = p.active === '1';
         const isNotExpired = p.unixtime_end ? p.unixtime_end > nowUnix : true;
-        
         return matchesConfig && isActive && isNotExpired;
       });
       
-      // Sort candidates: Newest purchase date first
       candidates.sort((a, b) => b.date.localeCompare(a.date));
 
       // 3. Process Reuse vs Buy
@@ -255,38 +246,22 @@ export default function App() {
       for (const proxy of candidates) {
         if (needed <= 0) break;
 
-        // Parse usage: "x/3"
-        // Regex looks for "number/3"
         const match = proxy.descr ? proxy.descr.match(/\b(\d+)\/3\b/) : null;
-        const currentUsage = match ? parseInt(match[1], 10) : 0; // Assume 0 if not tagged yet
+        const currentUsage = match ? parseInt(match[1], 10) : 0; 
 
         if (currentUsage < 3) {
-            // Reuse this proxy
             const newUsage = currentUsage + 1;
-            // Update regex to replace only the found pattern, or append if missing
             let newDescr = '';
             if (proxy.descr && proxy.descr.match(/\b\d+\/3\b/)) {
                 newDescr = proxy.descr.replace(/\b\d+\/3\b/, `${newUsage}/3`);
             } else {
-                // Append to existing or create new
                 newDescr = proxy.descr ? `${proxy.descr} ${newUsage}/3` : `${config.description || ''} ${newUsage}/3`.trim();
             }
 
             addLog('info', t('reuseProxy', { host: proxy.host, port: proxy.port, usage: newUsage }));
-            
-            // Call API to update description
-            const updateRes = await setProxyDescription(currentConfig, proxy.id, newDescr);
-            
-            // Log the result to help debug
-            // if (updateRes.status === 'yes') {
-            //      addLog('info', 'Tag update response', `Status: ${updateRes.status}, Count: ${updateRes.count || 0}`);
-            // } else {
-            //      addLog('error', t('tagUpdateFailed', { error: updateRes.error || 'Unknown' }), `Status: ${updateRes.status}`);
-            // }
-            
-            await delay(400); // Rate limit protection
+            await setProxyDescription(currentConfig, proxy.id, newDescr);
+            await delay(400); 
 
-            // Update local object to reflect change for display
             acquiredProxies.push({ ...proxy, descr: newDescr });
             needed--;
         }
@@ -301,9 +276,7 @@ export default function App() {
 
         addLog('info', t('buyingProxies', { count: needed, suffix: needed > 1 ? (t('days') === 'days' ? 'ies' : 's') : (t('days') === 'days' ? 'y' : '') }));
 
-        // Prepare description: "1/3" for new proxies
         const initDescr = `${config.description || ''} 1/3`.trim();
-        
         const buyRes = await buyProxies(currentConfig, needed, initDescr);
 
         if (buyRes.status === 'yes' && buyRes.list) {
@@ -314,7 +287,6 @@ export default function App() {
                 acquiredProxies.push({ ...p, descr: initDescr });
             });
             
-            // Update balance
             if (buyRes.balance) setBalance(`${buyRes.balance} ${buyRes.currency}`);
         } else {
             addLog('error', t('purchaseFailed', { error: buyRes.error || 'Unknown error' }));
@@ -323,17 +295,21 @@ export default function App() {
 
       // 5. Finalize Output
       if (acquiredProxies.length > 0) {
-        // Format: Host:Port:User:Pass
         const formattedList = acquiredProxies.map((p: ProxyItem) => `${p.host}:${p.port}:${p.user}:${p.pass}`).join('\n');
         setLastPurchased(formattedList);
         
-        // Copy first one to clipboard automatically if only 1 requested
+        // Try to auto-copy if only 1 item
         if (acquiredProxies.length === 1) {
             const success = await copyTextToClipboard(formattedList);
             if (success) {
                 setIsCopied(true);
                 setTimeout(() => setIsCopied(false), 2000);
                 addLog('success', t('autoCopied'));
+            } else {
+                // If auto-copy fails (due to browser security), we notify the user 
+                // and highlight the button to encourage manual copy.
+                setHighlightCopy(true);
+                addLog('warning', t('manualCopyRequired'));
             }
         } else {
              addLog('success', t('acquiredCount', { count: acquiredProxies.length }));
@@ -477,10 +453,12 @@ export default function App() {
                     <button
                       onClick={handleCopyProxy}
                       className={`
-                        md:w-24 shrink-0 rounded-lg flex flex-col items-center justify-center gap-1 transition-all
+                        md:w-24 shrink-0 rounded-lg flex flex-col items-center justify-center gap-1 transition-all duration-300
                         ${isCopied 
                           ? 'bg-emerald-500 text-white' 
-                          : 'bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white'
+                          : highlightCopy 
+                            ? 'bg-amber-600 text-white animate-pulse shadow-[0_0_15px_rgba(245,158,11,0.5)]' 
+                            : 'bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white'
                         }
                       `}
                     >
