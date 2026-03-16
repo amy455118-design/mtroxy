@@ -130,6 +130,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({ config, isOpen, on
                   onChange={(e) => handleChange('type', e.target.value)}
                   className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white outline-none"
                 >
+                  <option value={ProxyType.AUTO}>Auto (HTTP/SOCKS)</option>
                   <option value={ProxyType.HTTP}>HTTPs</option>
                   <option value={ProxyType.SOCKS}>SOCKS5</option>
                 </select>

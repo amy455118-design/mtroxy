@@ -6,7 +6,7 @@ export const DEFAULT_CONFIG: AppConfig = {
   period: 7,
   country: 'br',
   version: ProxyVersion.IPv4,
-  type: ProxyType.SOCKS,
+  type: ProxyType.AUTO,
   description: '',
   autoProlong: false,
   useCorsProxy: true,

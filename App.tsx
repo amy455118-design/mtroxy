@@ -231,7 +231,7 @@ export default function App() {
         const matchesConfig = (
           isV6 === configIsV6 && 
           p.country === config.country && 
-          p.type === config.type
+          (p.type === config.type || p.type === 'auto' || config.type === 'auto')
         );
         const isActive = p.active === '1';
         const isNotExpired = p.unixtime_end ? p.unixtime_end > nowUnix : true;
