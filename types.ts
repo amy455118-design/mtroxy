@@ -7,7 +7,6 @@ export enum ProxyVersion {
 export enum ProxyType {
   HTTP = 'http',
   SOCKS = 'socks',
-  AUTO = 'auto',
 }
 
 export interface AppConfig {
